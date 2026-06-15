@@ -49,10 +49,10 @@ Storage: per-meeting folder of files on disk (no DB server in v1).
 ### 2.1 Components
 
 **Frontend — React + Vite**
-- **Upload view** — drag/drop or browse a local file; client-side validation of type/size.
+- **Upload view** — drag/drop or browse a local file; client-side validation of type/size; a **"Trim silence (cheaper transcription)"** toggle (default OFF, see §5.4) sent with the upload.
 - **Progress view** — polls `GET /meetings/{id}/status`; shows stages: `Uploaded → Extracting audio → Transcribing & diarizing → Generating notes → Done` with percent.
 - **Results view** — tabs:
-  - **Notes** — rendered from `notes.json`: summary (prose), action items (checklist with owner/due), decisions (list), topic timeline (clickable list — clicking a topic jumps the transcript to that time), open questions (list). Includes an **Export / Copy Markdown** action backed by `notes.md`.
+  - **Notes** — rendered from `notes.json`: summary (prose), action items (checklist with owner/due), decisions (list), topic timeline (clickable list — clicking a topic scrolls the transcript to the matching segment, anchored on segment `id` rather than wall-clock time), open questions (list). Includes an **Export / Copy Markdown** action backed by `notes.md`.
   - **Transcript** — rendered from `transcript.json`: consecutive same-speaker segments grouped into turns, `start` shown as `mm:ss`.
 - **Q&A chat** — sends questions to `POST /meetings/{id}/ask`; renders answers with speaker/timestamp citations when present; history from `qa.json`.
 
@@ -112,6 +112,7 @@ Every transcription provider's output is normalized into this provider-agnostic 
 
 - `start` / `end` are seconds (floats). `speakers` is the distinct set of labels present.
 - The UI formats `start` as `mm:ss` and groups consecutive same-speaker segments into turns.
+- **Timestamps are best-effort, not load-bearing in v1.** No feature seeks an original media player, so transcript navigation (e.g. clicking a topic) anchors on **segment `id`**, not wall-clock time. When silence-trimming (§5.4) is ON, `start`/`end` reflect the *trimmed* timeline and are slightly offset from the original recording — acceptable because nothing in v1 depends on original-timeline accuracy. (A future media player with seek would require either leaving trim OFF or adding timestamp remapping; deferred.)
 
 ---
 
@@ -135,6 +136,17 @@ Transcriber.transcribe(audio_path: Path, language: str | None) -> Transcript
 
 ### 5.3 Future adapters (not built in v1)
 Deepgram and AssemblyAI (both diarize natively); local Whisper. They implement the same `Transcriber` interface and normalize to §4.
+
+### 5.4 Optional silence trimming (Silero VAD) — `vad_trim`
+
+A pre-transcription step that physically removes long silences from `audio.wav` before upload, reducing billed audio (OpenAI bills by audio duration: ~$0.006/min or per audio-input-token, so savings ≈ silence fraction removed).
+
+- **UI toggle** per meeting on the upload screen: *"Trim silence (cheaper transcription)"*. Default **OFF**. The chosen value is passed with the upload and recorded in `job.json`.
+- **Implementation:** Silero VAD detects speech regions; only **long** silences (e.g. > 1.5s) are removed, short within-turn pauses kept (preserves diarization context). Produces a trimmed audio file fed to the `Transcriber`.
+- **No timestamp remapping in v1** (see §4): when ON, stored timestamps are on the trimmed timeline. This is the deliberate simplification that makes the toggle cheap to build.
+- **Magnitude:** savings are modest per meeting (a 60-min meeting ≈ $0.36; ~20% silence → ~$0.07 saved); meaningful mainly at volume or for gappy recordings. Hence default OFF.
+- **Double duty:** the future local-Whisper adapter reuses Silero (via `faster-whisper`'s built-in VAD filter) for anti-hallucination on silence.
+- Why not rely on OpenAI's `chunking_strategy`: that only *windows* long audio for processing — it does not drop silent regions from billing. Saving tokens requires physically trimming before upload.
 
 ---
 
