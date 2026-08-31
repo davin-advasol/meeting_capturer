@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python 'C:\\Users\\DavinDewanto\\Desktop\\advasolutions\\meeting_capturer\\.codex\\hooks\\pytest_stop.py'"
+          }
+        ]
+      }
+    ]
+  }
+}
