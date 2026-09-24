@@ -1254,9 +1254,22 @@ def test_a_word_barely_touching_a_turn_is_unattributed():
     assert speaker_for(word(0.0, 1.0), [turn(0.9, 3.0, "SPEAKER_00")]) is None
 
 
-def test_a_clear_majority_wins_over_a_brief_second_speaker():
+def test_a_dominant_speaker_wins_despite_a_brief_overlap():
+    # Verifies the floor passes and the top-ranked speaker is selected when a
+    # second speaker briefly overlaps. Note this CANNOT detect a deleted
+    # tiebreak: removing that branch only turns None into a speaker, never the
+    # reverse, so any test asserting a speaker is returned is blind to it.
+    # The tiebreak is covered by the two tests that assert None.
     turns = [turn(0.0, 0.95, "SPEAKER_00"), turn(0.95, 2.0, "SPEAKER_01")]
     assert speaker_for(word(0.0, 1.0), turns) == "SPEAKER_00"
+
+
+def test_a_close_runner_up_blocks_attribution_even_without_an_exact_tie():
+    # 0.65 vs 0.35 of a 1.0s word: the leader clears the 50% floor, but the
+    # runner-up is above 50% of the leader (0.35 >= 0.325), so the word stays
+    # unattributed. Deleting the tiebreak returns "SPEAKER_00" and fails this.
+    turns = [turn(0.0, 0.65, "SPEAKER_00"), turn(0.65, 2.0, "SPEAKER_01")]
+    assert speaker_for(word(0.0, 1.0), turns) is None
 
 
 def test_validate_interval_rejects_a_negative_start():
@@ -1426,7 +1439,7 @@ def label(raw: dict, diarization: dict) -> dict:
 - [ ] **Step 4: Run them and watch them pass**
 
 Run: `python -m pytest tests/test_labeling.py -v`
-Expected: 11 passed.
+Expected: 12 passed.
 
 - [ ] **Step 5: Commit**
 
