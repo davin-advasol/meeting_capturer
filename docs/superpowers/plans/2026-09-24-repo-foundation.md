@@ -1424,7 +1424,7 @@ def label(raw: dict, diarization: dict) -> dict:
 - [ ] **Step 4: Run them and watch them pass**
 
 Run: `python -m pytest tests/test_labeling.py -v`
-Expected: 10 passed.
+Expected: 11 passed.
 
 - [ ] **Step 5: Commit**
 
