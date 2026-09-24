@@ -951,11 +951,13 @@ def test_identical_frames_are_unchanged():
 
 
 def test_a_small_bright_block_trips_the_tile_ratio():
-    # A 64x64 frame splits into 8x8 tiles of 8x8 pixels each, so an 8x8 block
-    # fills exactly one tile: that tile's mean is 1.0, far past tile_ratio,
-    # while the overall changed area is only 1.6%.
+    # A 6x6 block sits inside a single 8x8 tile, giving that tile a mean of
+    # 0.5625 (far past tile_ratio=0.12), while changing only 0.88% of the frame
+    # overall - under change_ratio=0.015. So ONLY the tile check can trip this.
+    # An 8x8 block would change 1.5625%, tripping the overall check too, and the
+    # test would pass even with the tile branch deleted.
     a, b = blank(), blank()
-    b[0:8, 0:8] = 255
+    b[0:6, 0:6] = 255
     assert changed(a, b, Thresholds()) is True
 
 
