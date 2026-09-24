@@ -40,6 +40,16 @@ def turns_from_annotation(annotation) -> list[dict]:
     return turns
 
 
+def has_overlaps(turns: list[dict]) -> bool:
+    """Whether any turn runs past the start of the next one.
+
+    Assumes `turns` is sorted by (start, end). Overlapping speech is preserved
+    in the artifact even though the readable transcript cannot attribute the
+    overlapping words, so consumers need to know it is present.
+    """
+    return any(x["end"] > y["start"] for x, y in zip(turns, turns[1:], strict=False))
+
+
 def diarize(
     audio: Path,
     model: str = DEFAULT_MODEL,
@@ -78,5 +88,5 @@ def diarize(
         "min_speakers": min_speakers,
         "max_speakers": max_speakers,
         "turns": turns,
-        "has_overlaps": any(x["end"] > y["start"] for x, y in zip(turns, turns[1:], strict=False)),
+        "has_overlaps": has_overlaps(turns),
     }
