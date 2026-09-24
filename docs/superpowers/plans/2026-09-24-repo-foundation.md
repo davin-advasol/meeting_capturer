@@ -1520,7 +1520,7 @@ import wave
 import numpy as np
 import pytest
 
-from meeting_digest.diarize import load_pcm16_mono, turns_from_annotation
+from meeting_digest.diarize import has_overlaps, load_pcm16_mono, turns_from_annotation
 from meeting_digest.errors import DigestError
 
 
@@ -1564,13 +1564,20 @@ def test_turns_from_annotation_sorts_and_names_speakers():
     assert turns[0]["source_speaker"] == "SPEAKER_00"
 
 
-def test_turns_from_annotation_detects_overlap():
-    annotation = [
-        (types.SimpleNamespace(start=0.0, end=2.0), "SPEAKER_00"),
-        (types.SimpleNamespace(start=1.0, end=3.0), "SPEAKER_01"),
+def test_has_overlaps_is_true_when_a_turn_runs_into_the_next():
+    turns = [
+        {"start": 0.0, "end": 2.0, "source_speaker": "SPEAKER_00"},
+        {"start": 1.0, "end": 3.0, "source_speaker": "SPEAKER_01"},
     ]
-    turns = turns_from_annotation(annotation)
-    assert any(x["end"] > y["start"] for x, y in zip(turns, turns[1:]))
+    assert has_overlaps(turns) is True
+
+
+def test_has_overlaps_is_false_for_disjoint_turns():
+    turns = [
+        {"start": 0.0, "end": 1.0, "source_speaker": "SPEAKER_00"},
+        {"start": 1.0, "end": 2.0, "source_speaker": "SPEAKER_01"},
+    ]
+    assert has_overlaps(turns) is False
 ```
 
 Add `import types` at the top of `tests/test_diarize.py`.
@@ -1689,6 +1696,16 @@ def turns_from_annotation(annotation) -> list[dict]:
     return turns
 
 
+def has_overlaps(turns: list[dict]) -> bool:
+    """Whether any turn runs past the start of the next one.
+
+    Assumes `turns` is sorted by (start, end). Overlapping speech is preserved
+    in the artifact even though the readable transcript cannot attribute the
+    overlapping words, so consumers need to know it is present.
+    """
+    return any(x["end"] > y["start"] for x, y in zip(turns, turns[1:], strict=False))
+
+
 def diarize(
     audio: Path,
     model: str = DEFAULT_MODEL,
@@ -1727,14 +1744,14 @@ def diarize(
         "min_speakers": min_speakers,
         "max_speakers": max_speakers,
         "turns": turns,
-        "has_overlaps": any(x["end"] > y["start"] for x, y in zip(turns, turns[1:])),
+        "has_overlaps": has_overlaps(turns),
     }
 ```
 
 - [ ] **Step 5: Run them and watch them pass**
 
 Run: `python -m pytest tests/test_transcribe.py tests/test_diarize.py -v`
-Expected: 9 passed.
+Expected: 10 passed.
 
 - [ ] **Step 6: Commit**
 
