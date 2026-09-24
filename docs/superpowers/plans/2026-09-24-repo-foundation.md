@@ -573,7 +573,7 @@ def container_duration(probe_data: dict, stream: dict) -> float:
 - [ ] **Step 4: Run them and watch them pass**
 
 Run: `python -m pytest tests/test_timeline.py -v`
-Expected: 11 passed.
+Expected: 10 passed.
 
 - [ ] **Step 5: Commit**
 
@@ -1424,7 +1424,7 @@ def label(raw: dict, diarization: dict) -> dict:
 - [ ] **Step 4: Run them and watch them pass**
 
 Run: `python -m pytest tests/test_labeling.py -v`
-Expected: 11 passed.
+Expected: 10 passed.
 
 - [ ] **Step 5: Commit**
 
