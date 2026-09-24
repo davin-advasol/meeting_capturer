@@ -102,6 +102,7 @@ meeting-digest/
 │   ├─ meeting-digest/
 │   │   ├─ SKILL.md
 │   │   ├─ references/setup.md
+│   │   ├─ references/artifacts.md   the shared artifact contract (single source)
 │   │   └─ assets/meeting-notes.md
 │   └─ meeting-assistant/
 │       └─ SKILL.md
@@ -110,7 +111,7 @@ meeting-digest/
 ├─ tests/
 ├─ docs/
 │   ├─ architecture.md
-│   ├─ artifacts.md            the shared artifact contract
+│   ├─ artifacts.md            one-line pointer to the skill-owned contract
 │   ├─ adr/
 │   └─ superpowers/specs/
 └─ .github/workflows/
@@ -152,7 +153,16 @@ are new:
 Every command preserves the existing refuse-to-overwrite behavior: an existing
 output path is an error, not a silent overwrite.
 
-## Artifact contract (`docs/artifacts.md`)
+## Artifact contract (`skills/meeting-digest/references/artifacts.md`)
+
+The contract lives inside the skill directory, not under `docs/`, so it survives a
+standalone skill install (copying `skills/meeting-digest/` into `~/.claude/skills/`
+leaves repo-level `docs/` behind, which would break a `docs/artifacts.md` link).
+
+Single source, no duplication: `skills/meeting-assistant/SKILL.md` references the
+meeting-digest skill's copy, which is consistent with it already naming
+meeting-digest as the ingestion dependency. `docs/artifacts.md` is a one-line
+pointer for people browsing the repo.
 
 Both skills link to this document instead of restating formats. It specifies, for
 a meeting directory:
@@ -254,7 +264,8 @@ installs on a clean machine of each OS.
   approximate slide detection, ASR error, and speaker-label caveats.
 - **docs/architecture.md** — module boundaries, data flow from video to notes,
   and where the two skills sit relative to the package.
-- **docs/artifacts.md** — the contract above.
+- **skills/meeting-digest/references/artifacts.md** — the contract above.
+- **docs/artifacts.md** — a pointer to it, for repo browsers.
 - **docs/adr/** — one short record per decision in the table above.
 - **CONTRIBUTING.md** — dev setup, running tests, ruff, how to propose changes.
 - **CHANGELOG.md** — Keep a Changelog format, starting at `0.1.0`.
@@ -283,8 +294,8 @@ provide them.
    LICENSE and `.gitignore`
 2. **Package skeleton** — `pyproject.toml`, `src/` layout, `cli.py`, ruff config,
    `pip install -e .` works
-3. **Artifact contract** — `docs/artifacts.md`, `manifest.py`, `validate`,
-   contract tests
+3. **Artifact contract** — `skills/meeting-digest/references/artifacts.md`,
+   `manifest.py`, `validate`, contract tests
 4. **Port modules** — one at a time, test-first, behavior preserved
 5. **E2E fixture** — synthetic media generation and the end-to-end test
 6. **`mark-inspected`** — command plus the `meeting-assistant` SKILL.md updates
