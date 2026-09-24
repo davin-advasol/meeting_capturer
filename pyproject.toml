@@ -1,0 +1,53 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "meeting-digest"
+version = "0.1.0"
+description = "Turn recorded meetings into speaker-labeled transcripts, screenshots, and evidence-linked notes"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [{ name = "Davin Dewanto" }]
+keywords = ["meetings", "transcription", "diarization", "claude", "agent-skill"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Multimedia :: Sound/Audio :: Speech",
+]
+dependencies = [
+    "numpy>=2,<3",
+    "opencv-python-headless>=4.10",
+    "faster-whisper>=1.1",
+    "pyannote.audio>=3.3",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[project.urls]
+Homepage = "https://github.com/davin-advasol/meeting-digest"
+Issues = "https://github.com/davin-advasol/meeting-digest/issues"
+
+[project.scripts]
+meeting-digest = "meeting_digest.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/meeting_digest"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["slow: needs ffmpeg and real media generation"]
