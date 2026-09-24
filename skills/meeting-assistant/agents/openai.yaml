@@ -1,0 +1,3 @@
+interface:
+  display_name: "Meeting Assistant"
+  short_description: "Answer meeting questions with transcript and visual evidence"
