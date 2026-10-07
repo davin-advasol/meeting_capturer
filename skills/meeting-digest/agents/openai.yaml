@@ -1,0 +1,3 @@
+interface:
+  display_name: "Meeting Digest"
+  short_description: "Turn meeting videos into notes with visual evidence"
