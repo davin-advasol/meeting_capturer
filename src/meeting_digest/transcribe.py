@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from meeting_digest.diarize import load_pcm16_mono
 from meeting_digest.errors import DigestError
 from meeting_digest.timeline import stamp
 
@@ -49,8 +50,15 @@ def transcribe(
             "faster-whisper is not installed in this Python environment. "
             "Reinstall the package: pip install meeting-digest"
         ) from None
+    # Decode the WAV ourselves: faster-whisper's own path decoding goes through
+    # PyAV, whose newer releases reject the arguments faster-whisper passes.
+    pcm = load_pcm16_mono(audio)
+    if pcm["sample_rate"] != 16000:
+        raise DigestError("Expected 16 kHz WAV from `meeting-digest extract-audio`.")
     whisper = WhisperModel(model, device=device, compute_type=compute_type)
-    model_segments, info = whisper.transcribe(str(audio), language=language, word_timestamps=True)
+    model_segments, info = whisper.transcribe(
+        pcm["waveform"][0].numpy(), language=language, word_timestamps=True
+    )
     return {
         "source": str(audio.resolve()),
         "language": info.language,

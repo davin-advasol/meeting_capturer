@@ -37,3 +37,34 @@ def test_segments_from_model_tolerates_a_segment_with_no_words():
 def test_render_markdown_uses_readable_timestamps():
     rows = [{"start": 0.0, "end": 1.5, "text": "hello"}]
     assert render_markdown(rows) == "# Transcript\n\n[00:00:00.000–00:00:01.500] hello"
+
+
+def test_transcribe_passes_decoded_samples_not_a_path(tmp_path, monkeypatch):
+    import wave
+
+    import faster_whisper
+    import numpy as np
+
+    from meeting_digest.transcribe import transcribe
+
+    path = tmp_path / "audio.wav"
+    with wave.open(str(path), "wb") as wav:
+        wav.setnchannels(1)
+        wav.setsampwidth(2)
+        wav.setframerate(16000)
+        wav.writeframes(np.zeros(1600, dtype="<i2").tobytes())
+
+    seen = {}
+
+    class FakeModel:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def transcribe(self, audio, **kwargs):
+            seen["audio"] = audio
+            return [], type("Info", (), {"language": "en"})()
+
+    monkeypatch.setattr(faster_whisper, "WhisperModel", FakeModel)
+    transcribe(path)
+    assert isinstance(seen["audio"], np.ndarray)
+    assert seen["audio"].shape == (1600,)
