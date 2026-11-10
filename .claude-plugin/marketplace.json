@@ -1,0 +1,12 @@
+{
+  "name": "meeting-capturer",
+  "description": "Skills for turning recorded meetings into transcripts, screenshots and notes, driven by the meeting-digest command-line program.",
+  "owner": { "name": "Davin Dewanto" },
+  "plugins": [
+    {
+      "name": "meeting-tools",
+      "source": ".",
+      "description": "Digest recorded meetings into speaker-labeled transcripts, screenshots and evidence-linked notes, then answer questions about them."
+    }
+  ]
+}
